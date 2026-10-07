@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 import '/flutter_flow/scrollable_page_body.dart';
 import '/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
@@ -9,10 +11,7 @@ import '/flutter_flow/flutter_flow_widgets.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import 'verify_page_model.dart';
 export 'verify_page_model.dart';
@@ -31,33 +30,56 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  // 이 화면에서 생성하고, 이 화면이 종료될 때 한 번만 해제합니다.
+  final FocusNode _pinCodeFocusNode = FocusNode(
+    debugLabel: 'VerifyPage.smsCode',
+  );
+
   @override
   void initState() {
     super.initState();
+
     _model = createModel(context, () => VerifyPageModel());
 
-    // On page load action.
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.timerController.onStartTimer();
-    });
-
     authManager.handlePhoneAuthStateChanges(context);
-    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _model.timerController.onStartTimer();
+      _requestPinKeyboard();
+    });
+  }
+
+  void _requestPinKeyboard() {
+    if (!mounted) return;
+    if (ModalRoute.of(context)?.isCurrent != true) return;
+
+    _pinCodeFocusNode.requestFocus();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (ModalRoute.of(context)?.isCurrent != true) return;
+      if (!_pinCodeFocusNode.hasFocus) return;
+
+      // 안드로이드 뒤로가기로 키보드만 닫은 뒤 다시 눌러도 표시합니다.
+      SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+    });
   }
 
   @override
   void dispose() {
+    _pinCodeFocusNode.dispose();
     _model.dispose();
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _model.unfocusNode.canRequestFocus
-          ? FocusScope.of(context).requestFocus(_model.unfocusNode)
-          : FocusScope.of(context).unfocus(),
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
       child: Scaffold(
         key: scaffoldKey,
         backgroundColor: FlutterFlowTheme.of(context).primaryBackground,
@@ -85,18 +107,18 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                       Text(
                         '인증 코드 입력',
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Readex Pro',
-                          fontSize: 30.0,
-                          letterSpacing: 0.0,
-                        ),
+                              fontFamily: 'Readex Pro',
+                              fontSize: 30.0,
+                              letterSpacing: 0.0,
+                            ),
                       ),
                       Text(
                         '문자로 받은 6자리 인증코드를 입력하세요.',
                         style: FlutterFlowTheme.of(context).bodyMedium.override(
-                          fontFamily: 'Readex Pro',
-                          fontSize: 20.0,
-                          letterSpacing: 0.0,
-                        ),
+                              fontFamily: 'Readex Pro',
+                              fontSize: 20.0,
+                              letterSpacing: 0.0,
+                            ),
                       ),
                       Container(
                         width: 600.0,
@@ -112,14 +134,17 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                             autoDisposeControllers: false,
                             appContext: context,
                             length: 6,
-                            textStyle: FlutterFlowTheme.of(context).bodyLarge
-                                .override(
-                                  fontFamily: 'Readex Pro',
-                                  letterSpacing: 0.0,
-                                ),
+                            focusNode: _pinCodeFocusNode,
+                            autoFocus: false,
+                            autoUnfocus: false,
+                            onTap: _requestPinKeyboard,
+                            textStyle:
+                                FlutterFlowTheme.of(context).bodyLarge.override(
+                                      fontFamily: 'Readex Pro',
+                                      letterSpacing: 0.0,
+                                    ),
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             enableActiveFill: false,
-                            autoFocus: true,
                             enablePinAutofill: false,
                             errorTextSpace: 16.0,
                             showCursor: true,
@@ -142,18 +167,18 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                 topRight: Radius.circular(12.0),
                               ),
                               shape: PinCodeFieldShape.box,
-                              activeColor: FlutterFlowTheme.of(context)
-                                  .primaryText,
-                              inactiveColor: FlutterFlowTheme.of(context)
-                                  .alternate,
-                              selectedColor: FlutterFlowTheme.of(context)
-                                  .primary,
-                              activeFillColor: FlutterFlowTheme.of(context)
-                                  .primaryText,
-                              inactiveFillColor: FlutterFlowTheme.of(context)
-                                  .alternate,
-                              selectedFillColor: FlutterFlowTheme.of(context)
-                                  .primary,
+                              activeColor:
+                                  FlutterFlowTheme.of(context).primaryText,
+                              inactiveColor:
+                                  FlutterFlowTheme.of(context).alternate,
+                              selectedColor:
+                                  FlutterFlowTheme.of(context).primary,
+                              activeFillColor:
+                                  FlutterFlowTheme.of(context).primaryText,
+                              inactiveFillColor:
+                                  FlutterFlowTheme.of(context).alternate,
+                              selectedFillColor:
+                                  FlutterFlowTheme.of(context).primary,
                             ),
                             controller: _model.pinCodeController,
                             onChanged: (_) {},
@@ -185,8 +210,8 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                               children: [
                                 FaIcon(
                                   FontAwesomeIcons.clock,
-                                  color: FlutterFlowTheme.of(context)
-                                      .primaryText,
+                                  color:
+                                      FlutterFlowTheme.of(context).primaryText,
                                   size: 24.0,
                                 ),
                                 Padding(
@@ -200,20 +225,20 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                     initialTime: _model.timerInitialTimeMs,
                                     getDisplayTime: (value) =>
                                         StopWatchTimer.getDisplayTime(
-                                          value,
-                                          hours: false,
-                                          milliSecond: false,
-                                        ),
+                                      value,
+                                      hours: false,
+                                      milliSecond: false,
+                                    ),
                                     controller: _model.timerController,
                                     updateStateInterval: Duration(
                                       milliseconds: 1000,
                                     ),
                                     onChanged:
                                         (value, displayTime, shouldUpdate) {
-                                          _model.timerMilliseconds = value;
-                                          _model.timerValue = displayTime;
-                                          if (shouldUpdate) setState(() {});
-                                        },
+                                      _model.timerMilliseconds = value;
+                                      _model.timerValue = displayTime;
+                                      if (shouldUpdate) setState(() {});
+                                    },
                                     textAlign: TextAlign.start,
                                     style: FlutterFlowTheme.of(context)
                                         .headlineSmall
@@ -252,7 +277,7 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                       context.pushNamed('AuthPage');
                                     },
                                     child: Text(
-                                      '번호 다시 작성하기',
+                                      '핸드폰 번호 다시 작성하기',
                                       style: FlutterFlowTheme.of(context)
                                           .bodyMedium
                                           .override(
@@ -288,7 +313,8 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                           children: [
                             Text(
                               '인증코드를 받지 못하셨습니까?',
-                              style: FlutterFlowTheme.of(context).bodyMedium
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
                                   .override(
                                     fontFamily: 'Readex Pro',
                                     letterSpacing: 0.0,
@@ -311,20 +337,20 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                     size: 24.0,
                                   ),
                                   onPressed: () async {
-                                    final phoneNumberVal = widget!.phoneNumber;
+                                    final phoneNumberVal = widget.phoneNumber;
                                     if (phoneNumberVal == null ||
                                         phoneNumberVal.isEmpty ||
                                         !phoneNumberVal.startsWith('+')) {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                            SnackBar(
-                                              /*content: Text(
+                                        SnackBar(
+                                          /*content: Text(
                                               'Phone Number is required and has to start with +.'),*/
-                                              content: Text(
-                                                '+.으로 시작하는 핸드폰 번호가 필요합니다.',
-                                              ),
-                                            ),
-                                          );
+                                          content: Text(
+                                            '+.으로 시작하는 핸드폰 번호가 필요합니다.',
+                                          ),
+                                        ),
+                                      );
                                       return;
                                     }
                                     await authManager.beginPhoneAuth(
@@ -336,7 +362,7 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                           context.mounted,
                                           queryParameters: {
                                             'phoneNumber': serializeParam(
-                                              widget!.phoneNumber,
+                                              widget.phoneNumber,
                                               ParamType.String,
                                             ),
                                           }.withoutNulls,
@@ -348,7 +374,8 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                 ),
                                 Text(
                                   '다시받기',
-                                  style: FlutterFlowTheme.of(context).bodyMedium
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
                                       .override(
                                         fontFamily: 'Readex Pro',
                                         fontSize: 24.0,
@@ -370,17 +397,17 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                           onPressed: () async {
                             GoRouter.of(context).prepareAuthEvent();
                             final smsCodeVal = _model.pinCodeController!.text;
-                            if (smsCodeVal == null || smsCodeVal.isEmpty) {
+                            if (smsCodeVal.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('인증코드를 입력하세요.')),
                               );
                               return;
                             }
-                            final phoneVerifiedUser = await authManager
-                                .verifySmsCode(
-                                  context: context,
-                                  smsCode: smsCodeVal,
-                                );
+                            final phoneVerifiedUser =
+                                await authManager.verifySmsCode(
+                              context: context,
+                              smsCode: smsCodeVal,
+                            );
                             if (phoneVerifiedUser == null) {
                               return;
                             }
@@ -405,7 +432,8 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                               0.0,
                             ),
                             color: FlutterFlowTheme.of(context).primary,
-                            textStyle: FlutterFlowTheme.of(context).titleSmall
+                            textStyle: FlutterFlowTheme.of(context)
+                                .titleSmall
                                 .override(
                                   fontFamily: 'Readex Pro',
                                   color: Colors.white,

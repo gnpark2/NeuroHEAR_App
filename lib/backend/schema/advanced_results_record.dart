@@ -34,10 +34,17 @@ class AdvancedResultsRecord extends FirestoreRecord {
   DocumentReference get parentReference => reference.parent.parent!;
 
   void _initializeFields() {
-    _numOfQuestions = castToType<int>(snapshotData['NumOfQuestions']);
-    _numOfCollectQuestions =
-        castToType<int>(snapshotData['NumOfCollectQuestions']);
-    _createdTime = snapshotData['CreatedTime'] as DateTime?;
+    _numOfQuestions = castToType<int>(
+      snapshotData['numOfQuestions'] ?? snapshotData['NumOfQuestions'],
+    );
+
+    _numOfCollectQuestions = castToType<int>(
+      snapshotData['numOfCollectQuestions'] ??
+          snapshotData['NumOfCollectQuestions'],
+    );
+
+    _createdTime = (snapshotData['createdTime'] ?? snapshotData['CreatedTime'])
+        as DateTime?;
   }
 
   static Query<Map<String, dynamic>> collection([DocumentReference? parent]) =>
@@ -86,9 +93,9 @@ Map<String, dynamic> createAdvancedResultsRecordData({
 }) {
   final firestoreData = mapToFirestore(
     <String, dynamic>{
-      'NumOfQuestions': numOfQuestions,
-      'NumOfCollectQuestions': numOfCollectQuestions,
-      'CreatedTime': createdTime,
+      'numOfQuestions': numOfQuestions,
+      'numOfCollectQuestions': numOfCollectQuestions,
+      'createdTime': createdTime,
     }.withoutNulls,
   );
 

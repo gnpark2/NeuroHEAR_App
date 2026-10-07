@@ -4,14 +4,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../auth_manager.dart';
-import '../base_auth_user_provider.dart';
 import '../../flutter_flow/flutter_flow_util.dart';
 
 import '/backend/backend.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:stream_transform/stream_transform.dart';
 import 'anonymous_auth.dart';
-import 'apple_auth.dart';
 import 'email_auth.dart';
 import 'firebase_user_provider.dart';
 import 'google_auth.dart';
@@ -52,10 +48,6 @@ class FirebaseAuthManager extends AuthManager
         JwtSignInManager,
         GithubSignInManager,
         PhoneSignInManager {
-  // Set when using phone verification (after phone number is provided).
-  String? _phoneAuthVerificationCode;
-  // Set when using phone sign in in web mode (ignored otherwise).
-  ConfirmationResult? _webPhoneAuthConfirmationResult;
   FirebasePhoneAuthManager phoneAuthManager = FirebasePhoneAuthManager();
 
   @override
@@ -64,22 +56,36 @@ class FirebaseAuthManager extends AuthManager
   }
 
   @override
-  Future deleteUser(BuildContext context) async {
+  Future<bool> deleteUser(BuildContext context) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) return false;
+
     try {
-      if (!loggedIn) {
-        print('Error: delete user attempted with no logged in user!');
-        return;
-      }
-      await currentUser?.delete();
+      await user.delete();
+      return true;
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'requires-recent-login') {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Too long since most recent sign in. Sign in again before deleting your account.')),
+            content: Text(
+              e.code == 'requires-recent-login'
+                  ? '로그아웃 후 다시 로그인한 다음 탈퇴해주세요.'
+                  : '탈퇴하지 못했습니다. 연결 상태를 확인한 뒤 다시 시도해주세요.',
+            ),
+          ),
         );
       }
+      return false;
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('탈퇴하지 못했습니다. 잠시 후 다시 시도해주세요.'),
+          ),
+        );
+      }
+      return false;
     }
   }
 

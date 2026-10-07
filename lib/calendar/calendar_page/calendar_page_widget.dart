@@ -1,12 +1,8 @@
 import 'package:neuro_h_e_a_r/auth/firebase_auth/auth_util.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
-import '/flutter_flow/flutter_flow_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '/backend/backend.dart';
 import 'calendar_page_model.dart';
 export 'calendar_page_model.dart';
@@ -56,6 +52,16 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
     final firstDay = DateTime.now().subtract(Duration(days: 365 * 10));
     final lastDay = DateTime.now().add(Duration(days: 365 * 10));
 
+    if (currentUserReference == null) {
+      return const Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: Text('로그인 후 기록을 확인해주세요.'),
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: () => _model.unfocusNode.canRequestFocus
           ? FocusScope.of(context).requestFocus(_model.unfocusNode)
@@ -84,6 +90,21 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                               query.orderBy('createdTime', descending: true),
                         ),
                         builder: (context, advancedSnapshot) {
+                          if (basicSnapshot.hasError ||
+                              advancedSnapshot.hasError) {
+                            return Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                children: [
+                                  const Text('훈련 기록을 불러오지 못했습니다.'),
+                                  TextButton(
+                                    onPressed: () => setState(() {}),
+                                    child: const Text('다시 시도'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                           if (!basicSnapshot.hasData ||
                               !advancedSnapshot.hasData) {
                             return Center(
@@ -197,7 +218,6 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                       final text =
                                           DateFormat.E('ko_KR').format(day);
                                       if (day.weekday == DateTime.sunday) {
-                                        final text = DateFormat.E().format(day);
                                         return Center(
                                           child: Text(
                                             "일",

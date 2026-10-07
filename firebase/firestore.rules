@@ -1,25 +1,100 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{document} {
-      allow create: if true;
-      allow read: if request.auth.uid == document;
-      allow write: if request.auth.uid == document;
-      allow delete: if request.auth.uid == document;
+    function owner(uid) {
+      return request.auth != null
+          && request.auth.uid == uid;
     }
 
-    match /users/{parent}/BasicResults/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth.uid == parent;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    function validProfile(uid) {
+      let d = request.resource.data;
+
+      return d.keys().hasOnly([
+          'uid',
+          'email',
+          'display_name',
+          'photo_url',
+          'phone_number',
+          'created_time',
+          'hearing'
+        ])
+        && d.get('uid', uid) == uid
+        && d.get('email', '') is string
+        && d.get('display_name', '') is string
+        && d.get('photo_url', '') is string
+        && d.get('phone_number', '') is string
+        && d.get('created_time', request.time) is timestamp
+        && d.get('hearing', '') in ['', 'T', 'N'];
     }
 
-    match /users/{parent}/AdvancedResults/{document} {
-      allow create: if request.auth != null;
-      allow read: if request.auth.uid == parent;
-      allow write: if request.auth != null;
-      allow delete: if request.auth != null;
+    function validResult() {
+      let d = request.resource.data;
+
+      let questions =
+          d.get('numOfQuestions', d.get('NumOfQuestions', 0));
+
+      let correct =
+          d.get(
+            'numOfCollectQuestions',
+            d.get('NumOfCollectQuestions', 0)
+          );
+
+      return d.keys().hasOnly([
+          'numOfQuestions',
+          'numOfCollectQuestions',
+          'createdTime',
+          'NumOfQuestions',
+          'NumOfCollectQuestions',
+          'CreatedTime'
+        ])
+        && questions is int
+        && correct is int
+        && questions >= 0
+        && correct >= 0
+        && correct <= questions
+        && d.get(
+             'createdTime',
+             d.get('CreatedTime', null)
+           ) is timestamp;
+    }
+
+    match /users/{uid} {
+      allow read: if owner(uid);
+
+      allow create, update: if owner(uid)
+          && validProfile(uid);
+
+      // 회원 탈퇴 데이터 삭제는 서버에서 처리합니다.
+      allow delete: if false;
+
+      match /{kind}/{resultId} {
+        allow read: if owner(uid)
+            && kind in ['BasicResults', 'AdvancedResults'];
+
+        allow create, update: if owner(uid)
+            && kind in ['BasicResults', 'AdvancedResults']
+            && validResult();
+
+        allow delete: if false;
+
+        // 답변 중복 저장 방지 기록
+        match /answers/{answerId} {
+          allow read: if owner(uid)
+              && kind in ['BasicResults', 'AdvancedResults'];
+
+          allow create: if owner(uid)
+              && kind in ['BasicResults', 'AdvancedResults']
+              && request.resource.data.keys().hasOnly([
+                   'correct',
+                   'createdTime'
+                 ])
+              && request.resource.data.correct is bool
+              && request.resource.data.createdTime is timestamp;
+
+          allow update, delete: if false;
+        }
+      }
     }
   }
 }

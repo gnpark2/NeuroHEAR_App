@@ -4,8 +4,6 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import 'delete_user_component_model.dart';
 export 'delete_user_component_model.dart';
@@ -71,17 +69,19 @@ class _DeleteUserComponentWidgetState extends State<DeleteUserComponentWidget> {
                 Text(
                   '정말로 계정을 지우시겠습니까? 계정을 지우면 모든 데이터는 없어집니다.',
                   style: FlutterFlowTheme.of(context).bodyMedium.override(
-                    fontFamily: 'Readex Pro',
-                    fontSize: 20.0,
-                    letterSpacing: 0.0,
-                    fontWeight: FontWeight.w600,
-                  ),
+                        fontFamily: 'Readex Pro',
+                        fontSize: 20.0,
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 Padding(
                   padding: EdgeInsetsDirectional.fromSTEB(0.0, 16.0, 0.0, 0.0),
                   child: FFButtonWidget(
                     onPressed: () async {
-                      await authManager.deleteUser(context);
+                      final deleted = await authManager.deleteUser(context);
+
+                      if (!context.mounted || !deleted) return;
 
                       context.goNamed('AuthPage');
                     },
@@ -102,15 +102,15 @@ class _DeleteUserComponentWidgetState extends State<DeleteUserComponentWidget> {
                         0.0,
                       ),
                       color: Color(0xFFE70C16),
-                      textStyle: FlutterFlowTheme.of(context).bodyLarge
-                          .override(
-                            fontFamily: 'Readex Pro',
-                            color: FlutterFlowTheme.of(context)
-                                .secondaryBackground,
-                            fontSize: 24.0,
-                            letterSpacing: 0.0,
-                            fontWeight: FontWeight.w600,
-                          ),
+                      textStyle:
+                          FlutterFlowTheme.of(context).bodyLarge.override(
+                                fontFamily: 'Readex Pro',
+                                color: FlutterFlowTheme.of(context)
+                                    .secondaryBackground,
+                                fontSize: 24.0,
+                                letterSpacing: 0.0,
+                                fontWeight: FontWeight.w600,
+                              ),
                       elevation: 2.0,
                       borderSide: BorderSide(
                         color: Colors.transparent,
@@ -142,7 +142,8 @@ class _DeleteUserComponentWidgetState extends State<DeleteUserComponentWidget> {
                         0.0,
                       ),
                       color: FlutterFlowTheme.of(context).primaryBackground,
-                      textStyle: FlutterFlowTheme.of(context).titleSmall
+                      textStyle: FlutterFlowTheme.of(context)
+                          .titleSmall
                           .override(
                             fontFamily: 'Lexend Deca',
                             color: FlutterFlowTheme.of(context).secondaryText,

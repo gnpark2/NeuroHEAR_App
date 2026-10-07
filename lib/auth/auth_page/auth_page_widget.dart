@@ -4,13 +4,8 @@ import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
 
 import 'auth_page_model.dart';
 export 'auth_page_model.dart';
@@ -100,9 +95,9 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => _model.unfocusNode.canRequestFocus
-          ? FocusScope.of(context).requestFocus(_model.unfocusNode)
-          : FocusScope.of(context).unfocus(),
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         key: scaffoldKey,
@@ -218,20 +213,19 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                       ),
                                             ),
                                             Padding(
-                                              padding:
-                                                  EdgeInsetsDirectional.fromSTEB(
-                                                    0.0,
-                                                    4.0,
-                                                    0.0,
-                                                    24.0,
-                                                  ),
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(
+                                                0.0,
+                                                4.0,
+                                                0.0,
+                                                24.0,
+                                              ),
                                               child: Text(
                                                 '회원가입을 위해 핸드폰 번호 뒤에 8자리를 입력해주세요.',
                                                 textAlign: TextAlign.start,
-                                                style:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).labelMedium.override(
+                                                style: FlutterFlowTheme.of(
+                                                  context,
+                                                ).labelMedium.override(
                                                       fontFamily: 'Readex Pro',
                                                       fontSize: 20.0,
                                                       letterSpacing: 0.0,
@@ -239,8 +233,7 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                               ),
                                             ),
                                             Container(
-                                              width:
-                                                  MediaQuery.sizeOf(context)
+                                              width: MediaQuery.sizeOf(context)
                                                       .width *
                                                   1.0,
                                               decoration: BoxDecoration(
@@ -256,23 +249,25 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                 children: [
                                                   Padding(
                                                     padding:
-                                                        EdgeInsetsDirectional.fromSTEB(
-                                                          16.0,
-                                                          0.0,
-                                                          8.0,
-                                                          0.0,
-                                                        ),
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                      16.0,
+                                                      0.0,
+                                                      8.0,
+                                                      0.0,
+                                                    ),
                                                     child: Text(
                                                       '+8210',
                                                       style:
                                                           FlutterFlowTheme.of(
-                                                            context,
-                                                          ).bodyMedium.override(
-                                                            fontFamily:
-                                                                'Readex Pro',
-                                                            fontSize: 24.0,
-                                                            letterSpacing: 0.0,
-                                                          ),
+                                                        context,
+                                                      ).bodyMedium.override(
+                                                                fontFamily:
+                                                                    'Readex Pro',
+                                                                fontSize: 24.0,
+                                                                letterSpacing:
+                                                                    0.0,
+                                                              ),
                                                     ),
                                                   ),
                                                   SizedBox(
@@ -296,150 +291,178 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                               .telephoneNumber,
                                                         ],
                                                         obscureText: false,
-                                                        decoration: InputDecoration(
+                                                        decoration:
+                                                            InputDecoration(
                                                           labelText: '',
                                                           labelStyle:
-                                                              FlutterFlowTheme.of(
-                                                                context,
-                                                              ).labelLarge.override(
-                                                                fontFamily: 'Readex Pro',
-                                                                color: Color(
-                                                                  0xFF383F44,
-                                                                ),
-                                                                fontSize: 24.0,
-                                                                letterSpacing:
-                                                                    0.0,
-                                                              ),
-                                                          enabledBorder: OutlineInputBorder(
+                                                              FlutterFlowTheme
+                                                                      .of(
+                                                            context,
+                                                          ).labelLarge.override(
+                                                                    fontFamily:
+                                                                        'Readex Pro',
+                                                                    color:
+                                                                        Color(
+                                                                      0xFF383F44,
+                                                                    ),
+                                                                    fontSize:
+                                                                        24.0,
+                                                                    letterSpacing:
+                                                                        0.0,
+                                                                  ),
+                                                          enabledBorder:
+                                                              OutlineInputBorder(
                                                             borderSide:
                                                                 BorderSide(
-                                                                  color: Color(
-                                                                    0x00000000,
-                                                                  ),
-                                                                  width: 2.0,
-                                                                ),
-                                                            borderRadius: BorderRadius.only(
-                                                              bottomLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
-                                                              bottomRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
-                                                              topLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
-                                                              topRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                          focusedBorder: OutlineInputBorder(
-                                                            borderSide: BorderSide(
-                                                              color:
-                                                                  FlutterFlowTheme.of(
-                                                                    context,
-                                                                  ).primary,
+                                                              color: Color(
+                                                                0x00000000,
+                                                              ),
                                                               width: 2.0,
                                                             ),
-                                                            borderRadius: BorderRadius.only(
-                                                              bottomLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .only(
+                                                              bottomLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
                                                               bottomRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
-                                                              topLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
-                                                              topRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
+                                                                  Radius
+                                                                      .circular(
+                                                                40.0,
+                                                              ),
+                                                              topLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                40.0,
+                                                              ),
                                                             ),
                                                           ),
-                                                          errorBorder: OutlineInputBorder(
-                                                            borderSide: BorderSide(
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
                                                               color:
-                                                                  FlutterFlowTheme.of(
-                                                                    context,
-                                                                  ).error,
+                                                                  FlutterFlowTheme
+                                                                      .of(
+                                                                context,
+                                                              ).primary,
                                                               width: 2.0,
                                                             ),
-                                                            borderRadius: BorderRadius.only(
-                                                              bottomLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .only(
+                                                              bottomLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
                                                               bottomRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
-                                                              topLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
-                                                              topRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
+                                                                  Radius
+                                                                      .circular(
+                                                                40.0,
+                                                              ),
+                                                              topLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                40.0,
+                                                              ),
                                                             ),
                                                           ),
-                                                          focusedErrorBorder: OutlineInputBorder(
-                                                            borderSide: BorderSide(
+                                                          errorBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
                                                               color:
-                                                                  FlutterFlowTheme.of(
-                                                                    context,
-                                                                  ).error,
+                                                                  FlutterFlowTheme
+                                                                      .of(
+                                                                context,
+                                                              ).error,
                                                               width: 2.0,
                                                             ),
-                                                            borderRadius: BorderRadius.only(
-                                                              bottomLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .only(
+                                                              bottomLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
                                                               bottomRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
-                                                              topLeft:
-                                                                  Radius.circular(
-                                                                    0.0,
-                                                                  ),
-                                                              topRight:
-                                                                  Radius.circular(
-                                                                    40.0,
-                                                                  ),
+                                                                  Radius
+                                                                      .circular(
+                                                                40.0,
+                                                              ),
+                                                              topLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                40.0,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          focusedErrorBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
+                                                              color:
+                                                                  FlutterFlowTheme
+                                                                      .of(
+                                                                context,
+                                                              ).error,
+                                                              width: 2.0,
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .only(
+                                                              bottomLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
+                                                              bottomRight:
+                                                                  Radius
+                                                                      .circular(
+                                                                40.0,
+                                                              ),
+                                                              topLeft: Radius
+                                                                  .circular(
+                                                                0.0,
+                                                              ),
+                                                              topRight: Radius
+                                                                  .circular(
+                                                                40.0,
+                                                              ),
                                                             ),
                                                           ),
                                                           contentPadding:
                                                               EdgeInsets.all(
-                                                                24.0,
-                                                              ),
+                                                            24.0,
+                                                          ),
                                                         ),
                                                         style:
                                                             FlutterFlowTheme.of(
-                                                              context,
-                                                            ).bodyLarge.override(
-                                                              fontFamily:
-                                                                  'Readex Pro',
-                                                              fontSize: 24.0,
-                                                              letterSpacing:
-                                                                  0.0,
-                                                            ),
+                                                          context,
+                                                        ).bodyLarge.override(
+                                                                  fontFamily:
+                                                                      'Readex Pro',
+                                                                  fontSize:
+                                                                      24.0,
+                                                                  letterSpacing:
+                                                                      0.0,
+                                                                ),
                                                         keyboardType:
                                                             TextInputType.phone,
                                                         validator: _model
                                                             .phoneNumberCreateTextControllerValidator
                                                             .asValidator(
-                                                              context,
-                                                            ),
+                                                          context,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -452,20 +475,18 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                 0.0,
                                               ),
                                               child: Padding(
-                                                padding:
-                                                    EdgeInsetsDirectional.fromSTEB(
-                                                      0.0,
-                                                      32.0,
-                                                      0.0,
-                                                      16.0,
-                                                    ),
+                                                padding: EdgeInsetsDirectional
+                                                    .fromSTEB(
+                                                  0.0,
+                                                  32.0,
+                                                  0.0,
+                                                  16.0,
+                                                ),
                                                 child: FFButtonWidget(
                                                   onPressed: () async {
                                                     final phoneNumberVal =
                                                         '+8210${_model.phoneNumberCreateTextController.text}';
-                                                    if (phoneNumberVal ==
-                                                            null ||
-                                                        phoneNumberVal
+                                                    if (phoneNumberVal
                                                             .isEmpty ||
                                                         !phoneNumberVal
                                                             .startsWith('+')) {
@@ -482,21 +503,22 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                       );
                                                       return;
                                                     }
-                                                    await authManager.beginPhoneAuth(
+                                                    await authManager
+                                                        .beginPhoneAuth(
                                                       context: context,
                                                       phoneNumber:
                                                           phoneNumberVal,
-                                                      onCodeSent: (context) async {
+                                                      onCodeSent:
+                                                          (context) async {
                                                         context.goNamedAuth(
                                                           'VerifyPage',
                                                           context.mounted,
                                                           queryParameters: {
                                                             'phoneNumber':
                                                                 serializeParam(
-                                                                  '+8210${_model.phoneNumberCreateTextController.text}',
-                                                                  ParamType
-                                                                      .String,
-                                                                ),
+                                                              '+8210${_model.phoneNumberCreateTextController.text}',
+                                                              ParamType.String,
+                                                            ),
                                                           }.withoutNulls,
                                                           ignoreRedirect: true,
                                                         );
@@ -508,32 +530,36 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                     width: 230.0,
                                                     height: 52.0,
                                                     padding:
-                                                        EdgeInsetsDirectional.fromSTEB(
-                                                          0.0,
-                                                          0.0,
-                                                          0.0,
-                                                          0.0,
-                                                        ),
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                    ),
                                                     iconPadding:
-                                                        EdgeInsetsDirectional.fromSTEB(
-                                                          0.0,
-                                                          0.0,
-                                                          0.0,
-                                                          0.0,
-                                                        ),
+                                                        EdgeInsetsDirectional
+                                                            .fromSTEB(
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                      0.0,
+                                                    ),
                                                     color: FlutterFlowTheme.of(
                                                       context,
                                                     ).primary,
                                                     textStyle:
                                                         FlutterFlowTheme.of(
-                                                          context,
-                                                        ).titleSmall.override(
-                                                          fontFamily:
-                                                              'Readex Pro',
-                                                          color: Colors.white,
-                                                          fontSize: 24.0,
-                                                          letterSpacing: 0.0,
-                                                        ),
+                                                      context,
+                                                    ).titleSmall.override(
+                                                              fontFamily:
+                                                                  'Readex Pro',
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 24.0,
+                                                              letterSpacing:
+                                                                  0.0,
+                                                            ),
                                                     elevation: 3.0,
                                                     borderSide: BorderSide(
                                                       color: Colors.transparent,
@@ -541,18 +567,20 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                     ),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          40.0,
-                                                        ),
+                                                      40.0,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ).animateOnPageLoad(animationsMap['columnOnPageLoadAnimation']!),
+                                      ).animateOnPageLoad(animationsMap[
+                                          'columnOnPageLoadAnimation']!),
                                     ),
                                   ),
-                                ).animateOnPageLoad(animationsMap['containerOnPageLoadAnimation']!),
+                                ).animateOnPageLoad(animationsMap[
+                                    'containerOnPageLoadAnimation']!),
                               ),
                             ],
                           ),
