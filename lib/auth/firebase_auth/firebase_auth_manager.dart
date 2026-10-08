@@ -49,6 +49,8 @@ class FirebaseAuthManager extends AuthManager
         GithubSignInManager,
         PhoneSignInManager {
   FirebasePhoneAuthManager phoneAuthManager = FirebasePhoneAuthManager();
+  int? _phoneAuthResendToken;
+  String? _phoneAuthNumber;
 
   @override
   Future signOut() {
@@ -181,24 +183,30 @@ class FirebaseAuthManager extends AuthManager
   ) =>
       _signInOrCreateAccount(context, () => jwtTokenSignIn(jwtToken), 'JWT');
 
-  void handlePhoneAuthStateChanges(BuildContext context) {
-    phoneAuthManager.addListener(() {
-      if (!context.mounted) {
+  VoidCallback handlePhoneAuthStateChanges(BuildContext context) {
+    void listener() {
+      if (!context.mounted || ModalRoute.of(context)?.isCurrent != true) {
         return;
       }
 
       if (phoneAuthManager.triggerOnCodeSent) {
-        phoneAuthManager.onCodeSent(context);
-        phoneAuthManager
-            .update(() => phoneAuthManager.triggerOnCodeSent = false);
+        final onCodeSent = phoneAuthManager.onCodeSent;
+        phoneAuthManager.triggerOnCodeSent = false;
+        onCodeSent(context);
       } else if (phoneAuthManager.phoneAuthError != null) {
-        final e = phoneAuthManager.phoneAuthError!;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: ${e.message!}'),
-        ));
-        phoneAuthManager.update(() => phoneAuthManager.phoneAuthError = null);
+        final error = phoneAuthManager.phoneAuthError!;
+        phoneAuthManager.phoneAuthError = null;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.message ?? '인증 요청에 실패했습니다.'),
+          ),
+        );
       }
-    });
+    }
+
+    phoneAuthManager.addListener(listener);
+    return () => phoneAuthManager.removeListener(listener);
   }
 
   @override
@@ -206,8 +214,23 @@ class FirebaseAuthManager extends AuthManager
     required BuildContext context,
     required String phoneNumber,
     required void Function(BuildContext) onCodeSent,
+    bool resend = false,
   }) async {
-    phoneAuthManager.update(() => phoneAuthManager.onCodeSent = onCodeSent);
+    final resendToken = resend && _phoneAuthNumber == phoneNumber
+        ? _phoneAuthResendToken
+        : null;
+
+    if (!resend || _phoneAuthNumber != phoneNumber) {
+      _phoneAuthResendToken = null;
+    }
+
+    _phoneAuthNumber = phoneNumber;
+
+    phoneAuthManager.update(() {
+      phoneAuthManager.onCodeSent = onCodeSent;
+      phoneAuthManager.triggerOnCodeSent = false;
+      phoneAuthManager.phoneAuthError = null;
+    });
     if (kIsWeb) {
       phoneAuthManager.webPhoneAuthConfirmationResult =
           await FirebaseAuth.instance.signInWithPhoneNumber(phoneNumber);
@@ -223,6 +246,7 @@ class FirebaseAuthManager extends AuthManager
     );
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: phoneNumber,
+      forceResendingToken: resendToken,
       timeout: Duration(
         seconds: 0,
       ), // Skips Android's default auto-verification
@@ -264,13 +288,18 @@ class FirebaseAuthManager extends AuthManager
         });
         if (!completer.isCompleted) completer.complete(false);
       },
-      codeSent: (verificationId, _) {
+      codeSent: (verificationId, resendToken) {
+        _phoneAuthResendToken = resendToken;
+
         phoneAuthManager.update(() {
           phoneAuthManager.phoneAuthVerificationCode = verificationId;
           phoneAuthManager.triggerOnCodeSent = true;
           phoneAuthManager.phoneAuthError = null;
         });
-        if (!completer.isCompleted) completer.complete(true);
+
+        if (!completer.isCompleted) {
+          completer.complete(true);
+        }
       },
       codeAutoRetrievalTimeout: (_) {},
     );

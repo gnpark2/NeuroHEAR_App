@@ -1,4 +1,3 @@
-import '/flutter_flow/flutter_flow_timer.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import 'package:stop_watch_timer/stop_watch_timer.dart';
 import 'verify_page_widget.dart' show VerifyPageWidget;
@@ -19,8 +18,6 @@ class VerifyPageModel extends FlutterFlowModel<VerifyPageWidget> {
     hours: false,
     milliSecond: false,
   );
-  FlutterFlowTimerController timerController =
-      FlutterFlowTimerController(StopWatchTimer(mode: StopWatchMode.countDown));
 
   @override
   void initState(BuildContext context) {
@@ -31,6 +28,5 @@ class VerifyPageModel extends FlutterFlowModel<VerifyPageWidget> {
   void dispose() {
     unfocusNode.dispose();
     pinCodeController?.dispose();
-    timerController.dispose();
   }
 }

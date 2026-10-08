@@ -21,6 +21,8 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
     with TickerProviderStateMixin {
   late AuthPageModel _model;
 
+  late final VoidCallback _removePhoneAuthListener;
+
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   final animationsMap = <String, AnimationInfo>{};
@@ -33,7 +35,7 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
     _model.phoneNumberCreateTextController ??= TextEditingController();
     _model.phoneNumberCreateFocusNode ??= FocusNode();
 
-    authManager.handlePhoneAuthStateChanges(context);
+    _removePhoneAuthListener = authManager.handlePhoneAuthStateChanges(context);
     animationsMap.addAll({
       'containerOnPageLoadAnimation': AnimationInfo(
         trigger: AnimationTrigger.onPageLoad,
@@ -87,8 +89,8 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
 
   @override
   void dispose() {
+    _removePhoneAuthListener();
     _model.dispose();
-
     super.dispose();
   }
 

@@ -1,10 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 import '/flutter_flow/scrollable_page_body.dart';
 import '/auth/firebase_auth/auth_util.dart';
-import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
-import '/flutter_flow/flutter_flow_timer.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 
@@ -27,13 +27,21 @@ class VerifyPageWidget extends StatefulWidget {
 
 class _VerifyPageWidgetState extends State<VerifyPageWidget> {
   late VerifyPageModel _model;
+  late final VoidCallback _removePhoneAuthListener;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // 이 화면에서 생성하고, 이 화면이 종료될 때 한 번만 해제합니다.
   final FocusNode _pinCodeFocusNode = FocusNode(
     debugLabel: 'VerifyPage.smsCode',
   );
+
+  Timer? _countdownTimer;
+  late DateTime _codeExpiresAt;
+  late DateTime _resendAvailableAt;
+
+  int _resendSeconds = 30;
+  bool _resending = false;
+  bool _verifying = false;
 
   @override
   void initState() {
@@ -41,14 +49,163 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
 
     _model = createModel(context, () => VerifyPageModel());
 
-    authManager.handlePhoneAuthStateChanges(context);
+    _removePhoneAuthListener = authManager.handlePhoneAuthStateChanges(context);
+
+    _restartCodeTimer();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
-      _model.timerController.onStartTimer();
       _requestPinKeyboard();
     });
+  }
+
+  void _restartCodeTimer() {
+    final now = DateTime.now();
+
+    _codeExpiresAt = now.add(
+      Duration(milliseconds: _model.timerInitialTimeMs),
+    );
+    _resendAvailableAt = now.add(const Duration(seconds: 30));
+
+    _startCountdown();
+  }
+
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    _updateCountdown();
+
+    _countdownTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _updateCountdown(),
+    );
+  }
+
+  void _updateCountdown() {
+    if (!mounted) return;
+
+    final now = DateTime.now();
+
+    setState(() {
+      _model.timerMilliseconds = _codeExpiresAt
+          .difference(now)
+          .inMilliseconds
+          .clamp(0, _model.timerInitialTimeMs)
+          .toInt();
+
+      _model.timerValue = StopWatchTimer.getDisplayTime(
+        _model.timerMilliseconds,
+        hours: false,
+        milliSecond: false,
+      );
+
+      _resendSeconds =
+          (_resendAvailableAt.difference(now).inMilliseconds / 1000)
+              .ceil()
+              .clamp(0, 30)
+              .toInt();
+    });
+
+    if (_model.timerMilliseconds == 0 && _resendSeconds == 0) {
+      _countdownTimer?.cancel();
+    }
+  }
+
+  Future<void> _resendCode() async {
+    if (_resending || _verifying || _resendSeconds > 0) return;
+
+    final phoneNumber = widget.phoneNumber;
+
+    if (phoneNumber == null || !phoneNumber.startsWith('+')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('핸드폰 번호를 다시 입력해주세요.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _resending = true);
+
+    // 실패한 요청도 연속해서 누르지 않도록 대기 시간을 적용합니다.
+    _resendAvailableAt = DateTime.now().add(
+      const Duration(seconds: 30),
+    );
+    _startCountdown();
+
+    try {
+      await authManager.beginPhoneAuth(
+        context: context,
+        phoneNumber: phoneNumber,
+        resend: true,
+        onCodeSent: (_) {
+          if (!mounted) return;
+
+          _model.pinCodeController?.clear();
+          _restartCodeTimer();
+          _requestPinKeyboard();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('인증코드를 다시 보냈습니다.'),
+            ),
+          );
+        },
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('재전송하지 못했습니다. 잠시 후 다시 시도해주세요.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _resending = false);
+      }
+    }
+  }
+
+  Future<void> _verifyCode() async {
+    if (_resending || _verifying) return;
+
+    final smsCode = _model.pinCodeController!.text.trim();
+
+    if (!RegExp(r'^\d{6}$').hasMatch(smsCode)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('6자리 인증코드를 입력하세요.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _verifying = true);
+
+    try {
+      GoRouter.of(context).prepareAuthEvent();
+
+      final user = await authManager.verifySmsCode(
+        context: context,
+        smsCode: smsCode,
+      );
+
+      if (!mounted || user == null) return;
+
+      context.goNamedAuth('_initialize', mounted);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('인증하지 못했습니다. 다시 시도해주세요.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _verifying = false);
+      }
+    }
   }
 
   void _requestPinKeyboard() {
@@ -62,13 +219,14 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
       if (ModalRoute.of(context)?.isCurrent != true) return;
       if (!_pinCodeFocusNode.hasFocus) return;
 
-      // 안드로이드 뒤로가기로 키보드만 닫은 뒤 다시 눌러도 표시합니다.
       SystemChannels.textInput.invokeMethod<void>('TextInput.show');
     });
   }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
+    _removePhoneAuthListener();
     _pinCodeFocusNode.dispose();
     _model.dispose();
     super.dispose();
@@ -221,24 +379,8 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                     0.0,
                                     0.0,
                                   ),
-                                  child: FlutterFlowTimer(
-                                    initialTime: _model.timerInitialTimeMs,
-                                    getDisplayTime: (value) =>
-                                        StopWatchTimer.getDisplayTime(
-                                      value,
-                                      hours: false,
-                                      milliSecond: false,
-                                    ),
-                                    controller: _model.timerController,
-                                    updateStateInterval: Duration(
-                                      milliseconds: 1000,
-                                    ),
-                                    onChanged:
-                                        (value, displayTime, shouldUpdate) {
-                                      _model.timerMilliseconds = value;
-                                      _model.timerValue = displayTime;
-                                      if (shouldUpdate) setState(() {});
-                                    },
+                                  child: Text(
+                                    _model.timerValue,
                                     textAlign: TextAlign.start,
                                     style: FlutterFlowTheme.of(context)
                                         .headlineSmall
@@ -270,12 +412,9 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                                     focusColor: Colors.transparent,
                                     hoverColor: Colors.transparent,
                                     highlightColor: Colors.transparent,
-                                    onTap: () async {
-                                      if (Navigator.of(context).canPop()) {
-                                        context.pop();
-                                      }
-                                      context.pushNamed('AuthPage');
-                                    },
+                                    onTap: _resending || _verifying
+                                        ? null
+                                        : () => context.goNamed('AuthPage'),
                                     child: Text(
                                       '핸드폰 번호 다시 작성하기',
                                       style: FlutterFlowTheme.of(context)
@@ -308,84 +447,21 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                         ),
                       ),
                       if (_model.timerMilliseconds == 0)
-                        Column(
-                          mainAxisSize: MainAxisSize.max,
-                          children: [
-                            Text(
-                              '인증코드를 받지 못하셨습니까?',
-                              style: FlutterFlowTheme.of(context)
-                                  .bodyMedium
-                                  .override(
-                                    fontFamily: 'Readex Pro',
-                                    letterSpacing: 0.0,
-                                  ),
-                            ),
-                            Wrap(
-                              alignment: WrapAlignment.center,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              spacing: 8,
-                              runSpacing: 12,
-                              children: [
-                                FlutterFlowIconButton(
-                                  borderRadius: 20.0,
-                                  borderWidth: 1.0,
-                                  buttonSize: 40.0,
-                                  icon: FaIcon(
-                                    FontAwesomeIcons.redoAlt,
-                                    color: FlutterFlowTheme.of(context)
-                                        .primaryText,
-                                    size: 24.0,
-                                  ),
-                                  onPressed: () async {
-                                    final phoneNumberVal = widget.phoneNumber;
-                                    if (phoneNumberVal == null ||
-                                        phoneNumberVal.isEmpty ||
-                                        !phoneNumberVal.startsWith('+')) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          /*content: Text(
-                                              'Phone Number is required and has to start with +.'),*/
-                                          content: Text(
-                                            '+.으로 시작하는 핸드폰 번호가 필요합니다.',
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
-                                    await authManager.beginPhoneAuth(
-                                      context: context,
-                                      phoneNumber: phoneNumberVal,
-                                      onCodeSent: (context) async {
-                                        context.goNamedAuth(
-                                          'VerifyPage',
-                                          context.mounted,
-                                          queryParameters: {
-                                            'phoneNumber': serializeParam(
-                                              widget.phoneNumber,
-                                              ParamType.String,
-                                            ),
-                                          }.withoutNulls,
-                                          ignoreRedirect: true,
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                                Text(
-                                  '다시받기',
-                                  style: FlutterFlowTheme.of(context)
-                                      .bodyMedium
-                                      .override(
-                                        fontFamily: 'Readex Pro',
-                                        fontSize: 24.0,
-                                        letterSpacing: 0.0,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        const Text('인증코드를 받지 못하셨습니까?'),
+                      TextButton.icon(
+                        onPressed:
+                            _resending || _verifying || _resendSeconds > 0
+                                ? null
+                                : _resendCode,
+                        icon: const Icon(Icons.refresh),
+                        label: Text(
+                          _resending
+                              ? '재전송 중…'
+                              : _resendSeconds > 0
+                                  ? '$_resendSeconds초 후 다시 받기'
+                                  : '인증번호 다시 받기',
                         ),
+                      ),
                       Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                           0.0,
@@ -394,28 +470,8 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                           0.0,
                         ),
                         child: FFButtonWidget(
-                          onPressed: () async {
-                            GoRouter.of(context).prepareAuthEvent();
-                            final smsCodeVal = _model.pinCodeController!.text;
-                            if (smsCodeVal.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('인증코드를 입력하세요.')),
-                              );
-                              return;
-                            }
-                            final phoneVerifiedUser =
-                                await authManager.verifySmsCode(
-                              context: context,
-                              smsCode: smsCodeVal,
-                            );
-                            if (phoneVerifiedUser == null) {
-                              return;
-                            }
-
-                            // Use the same profile gate as cold starts and deep
-                            // links instead of branching on a cached document.
-                            context.goNamedAuth('_initialize', context.mounted);
-                          },
+                          onPressed:
+                              _resending || _verifying ? null : _verifyCode,
                           text: '인증완료',
                           options: FFButtonOptions(
                             height: 40.0,
