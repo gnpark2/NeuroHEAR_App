@@ -527,17 +527,17 @@ class _AuthPageWidgetState extends State<AuthPageWidget>
                                                       },
                                                     );
                                                   },
-                                                  text: '인증하기',
+                                                  text: '인증 및 로그인하기',
                                                   options: FFButtonOptions(
                                                     width: 230.0,
                                                     height: 52.0,
                                                     padding:
                                                         EdgeInsetsDirectional
                                                             .fromSTEB(
-                                                      0.0,
-                                                      0.0,
-                                                      0.0,
-                                                      0.0,
+                                                      8.0,
+                                                      4.0,
+                                                      8.0,
+                                                      4.0,
                                                     ),
                                                     iconPadding:
                                                         EdgeInsetsDirectional

@@ -245,22 +245,20 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
           top: true,
           child: Column(
             mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
                 width: MediaQuery.sizeOf(context).width * 1.0,
                 decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
+                  color: FlutterFlowTheme.of(context).primaryBackground,
                 ),
                 child: Padding(
-                  padding: EdgeInsetsDirectional.fromSTEB(
-                    16.0,
-                    64.0,
-                    16.0,
-                    32.0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 24.0,
                   ),
                   child: Column(
-                    mainAxisSize: MainAxisSize.max,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         '인증 코드 입력',
@@ -447,19 +445,38 @@ class _VerifyPageWidgetState extends State<VerifyPageWidget> {
                         ),
                       ),
                       if (_model.timerMilliseconds == 0)
-                        const Text('인증코드를 받지 못하셨습니까?'),
+                        const Text(
+                          '인증코드를 받지 못하셨습니까?',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                          ),
+                        ),
                       TextButton.icon(
                         onPressed:
                             _resending || _verifying || _resendSeconds > 0
                                 ? null
                                 : _resendCode,
-                        icon: const Icon(Icons.refresh),
+                        icon: const Icon(
+                          Icons.refresh,
+                          color: Colors.redAccent,
+                          size: 20.0,
+                        ),
                         label: Text(
                           _resending
                               ? '재전송 중…'
                               : _resendSeconds > 0
                                   ? '$_resendSeconds초 후 다시 받기'
                                   : '인증번호 다시 받기',
+                          style:
+                              FlutterFlowTheme.of(context).bodyMedium.override(
+                                    fontFamily: 'Readex Pro',
+                                    fontSize: 20.0,
+                                    letterSpacing: 0.0,
+                                    color: _resending || _resendSeconds > 0
+                                        ? FlutterFlowTheme.of(context)
+                                            .secondaryText
+                                        : Color(0xFF0079FF),
+                                  ),
                         ),
                       ),
                       Padding(
