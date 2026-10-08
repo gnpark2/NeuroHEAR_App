@@ -105,6 +105,9 @@ class FirebaseAuthManager extends AuthManager
       await updateUserDocument(email: email);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'requires-recent-login') {
+        if (!context.mounted) {
+          return;
+        }
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -123,11 +126,17 @@ class FirebaseAuthManager extends AuthManager
     try {
       await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
     } on FirebaseAuthException catch (e) {
+      if (!context.mounted) {
+        return;
+      }
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.message!}')),
       );
       return null;
+    }
+    if (!context.mounted) {
+      return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Password reset email sent')),
@@ -347,6 +356,9 @@ class FirebaseAuthManager extends AuthManager
           ? null
           : NeuroHEARFirebaseUser.fromUserCredential(userCredential);
     } on FirebaseAuthException catch (e) {
+      if (!context.mounted) {
+        return null;
+      }
       final errorMsg = switch (e.code) {
         'email-already-in-use' =>
           'Error: The email is already in use by a different account',

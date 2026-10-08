@@ -91,8 +91,7 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                 onPressed: () async {
                                   if (scaffoldKey.currentState!.isDrawerOpen ||
                                       scaffoldKey
-                                          .currentState!
-                                          .isEndDrawerOpen) {
+                                          .currentState!.isEndDrawerOpen) {
                                     Navigator.pop(context);
                                   }
                                 },
@@ -107,9 +106,14 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                           highlightColor: Colors.transparent,
                           onTap: () async {
                             GoRouter.of(context).prepareAuthEvent();
-                            await authManager.signOut();
-                            GoRouter.of(context).clearRedirectLocation();
 
+                            await authManager.signOut();
+
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            GoRouter.of(context).clearRedirectLocation();
                             context.goNamedAuth('AuthPage', context.mounted);
                           },
                           child: Wrap(
@@ -142,7 +146,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                               ),
                               Text(
                                 '로그아웃',
-                                style: FlutterFlowTheme.of(context).bodyMedium
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
                                     .override(
                                       fontFamily: 'Readex Pro',
                                       color: FlutterFlowTheme.of(context)
@@ -174,9 +179,9 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                 return GestureDetector(
                                   onTap: () =>
                                       _model.unfocusNode.canRequestFocus
-                                      ? FocusScope.of(context)
-                                            .requestFocus(_model.unfocusNode)
-                                      : FocusScope.of(context).unfocus(),
+                                          ? FocusScope.of(context)
+                                              .requestFocus(_model.unfocusNode)
+                                          : FocusScope.of(context).unfocus(),
                                   child: Padding(
                                     padding: MediaQuery.viewInsetsOf(context),
                                     child: DeleteUserComponentWidget(),
@@ -214,7 +219,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                               ),
                               Text(
                                 '탈퇴하기',
-                                style: FlutterFlowTheme.of(context).bodyMedium
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
                                     .override(
                                       fontFamily: 'Readex Pro',
                                       color: FlutterFlowTheme.of(context).error,
@@ -425,8 +431,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                         8.0,
                                       ),
                                       child: RichText(
-                                        textScaler: MediaQuery.of(context)
-                                            .textScaler,
+                                        textScaler:
+                                            MediaQuery.of(context).textScaler,
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
@@ -434,7 +440,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                               style: TextStyle(),
                                             ),
                                             TextSpan(
-                                              text: '평소에 느끼셨던 대로 \'예/가끔/아니오\' 중 하나',
+                                              text:
+                                                  '평소에 느끼셨던 대로 \'예/가끔/아니오\' 중 하나',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -464,8 +471,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                         8.0,
                                       ),
                                       child: RichText(
-                                        textScaler: MediaQuery.of(context)
-                                            .textScaler,
+                                        textScaler:
+                                            MediaQuery.of(context).textScaler,
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
@@ -505,8 +512,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                         60.0,
                                       ),
                                       child: RichText(
-                                        textScaler: MediaQuery.of(context)
-                                            .textScaler,
+                                        textScaler:
+                                            MediaQuery.of(context).textScaler,
                                         text: TextSpan(
                                           children: [
                                             TextSpan(
@@ -520,7 +527,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                               ),
                                             ),
                                             TextSpan(
-                                              text: '를 클릭 하셔서 점수가 어디 포함되는지 확인하시고 본인의 청력 건강 상태를 점검하시기 바랍니다.',
+                                              text:
+                                                  '를 클릭 하셔서 점수가 어디 포함되는지 확인하시고 본인의 청력 건강 상태를 점검하시기 바랍니다.',
                                               style: TextStyle(),
                                             ),
                                           ],
@@ -574,17 +582,16 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  16.0,
-                                                  0.0,
-                                                  16.0,
-                                                ),
+                                              0.0,
+                                              16.0,
+                                              0.0,
+                                              16.0,
+                                            ),
                                             child: Text(
                                               '자가진단',
-                                              style:
-                                                  FlutterFlowTheme.of(
-                                                    context,
-                                                  ).bodyMedium.override(
+                                              style: FlutterFlowTheme.of(
+                                                context,
+                                              ).bodyMedium.override(
                                                     fontFamily: 'Readex Pro',
                                                     color: Color(0xFF0063A0),
                                                     fontSize: 30.0,
@@ -596,18 +603,17 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  8.0,
-                                                  0.0,
-                                                  8.0,
-                                                ),
+                                              0.0,
+                                              8.0,
+                                              0.0,
+                                              8.0,
+                                            ),
                                             child: Text(
                                               '아래의 자가진단 설문지는 \'한국어판 고령자 청력장애 검사\'입니다.',
                                               textAlign: TextAlign.center,
-                                              style:
-                                                  FlutterFlowTheme.of(
-                                                    context,
-                                                  ).bodyMedium.override(
+                                              style: FlutterFlowTheme.of(
+                                                context,
+                                              ).bodyMedium.override(
                                                     fontFamily: 'Readex Pro',
                                                     color: Color(0xFF0063A0),
                                                     fontSize: 24.0,
@@ -619,18 +625,17 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  8.0,
-                                                  0.0,
-                                                  8.0,
-                                                ),
+                                              0.0,
+                                              8.0,
+                                              0.0,
+                                              8.0,
+                                            ),
                                             child: Text(
                                               '이 설문지는 신뢰도와 타당도가 높아서 임상에서 많이 사용 되는 자가 보고 검사입니다.',
                                               textAlign: TextAlign.center,
-                                              style:
-                                                  FlutterFlowTheme.of(
-                                                    context,
-                                                  ).bodyMedium.override(
+                                              style: FlutterFlowTheme.of(
+                                                context,
+                                              ).bodyMedium.override(
                                                     fontFamily: 'Readex Pro',
                                                     color: Color(0xFF0063A0),
                                                     fontSize: 24.0,
@@ -642,17 +647,16 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  32.0,
-                                                  0.0,
-                                                  16.0,
-                                                ),
+                                              0.0,
+                                              32.0,
+                                              0.0,
+                                              16.0,
+                                            ),
                                             child: Text(
                                               '<사용 방법>',
-                                              style:
-                                                  FlutterFlowTheme.of(
-                                                    context,
-                                                  ).bodyMedium.override(
+                                              style: FlutterFlowTheme.of(
+                                                context,
+                                              ).bodyMedium.override(
                                                     fontFamily: 'Readex Pro',
                                                     color: Color(0xFF0063A0),
                                                     fontSize: 28.0,
@@ -664,11 +668,11 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  8.0,
-                                                  0.0,
-                                                  8.0,
-                                                ),
+                                              0.0,
+                                              8.0,
+                                              0.0,
+                                              8.0,
+                                            ),
                                             child: RichText(
                                               textScaler: MediaQuery.of(context)
                                                   .textScaler,
@@ -679,7 +683,8 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                                     style: TextStyle(),
                                                   ),
                                                   TextSpan(
-                                                    text: '평소에 느끼셨던 대로 \'예/가끔/아니오\' 중 하나',
+                                                    text:
+                                                        '평소에 느끼셨던 대로 \'예/가끔/아니오\' 중 하나',
                                                     style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.w600,
@@ -690,10 +695,9 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                                     style: TextStyle(),
                                                   ),
                                                 ],
-                                                style:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).bodyMedium.override(
+                                                style: FlutterFlowTheme.of(
+                                                  context,
+                                                ).bodyMedium.override(
                                                       fontFamily: 'Readex Pro',
                                                       color: Color(0xFF0063A0),
                                                       fontSize: 24.0,
@@ -706,11 +710,11 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  8.0,
-                                                  0.0,
-                                                  8.0,
-                                                ),
+                                              0.0,
+                                              8.0,
+                                              0.0,
+                                              8.0,
+                                            ),
                                             child: RichText(
                                               textScaler: MediaQuery.of(context)
                                                   .textScaler,
@@ -736,10 +740,9 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                                     ),
                                                   ),
                                                 ],
-                                                style:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).bodyMedium.override(
+                                                style: FlutterFlowTheme.of(
+                                                  context,
+                                                ).bodyMedium.override(
                                                       fontFamily: 'Readex Pro',
                                                       color: Color(0xFF0063A0),
                                                       fontSize: 24.0,
@@ -752,11 +755,11 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                           Padding(
                                             padding:
                                                 EdgeInsetsDirectional.fromSTEB(
-                                                  0.0,
-                                                  8.0,
-                                                  0.0,
-                                                  40.0,
-                                                ),
+                                              0.0,
+                                              8.0,
+                                              0.0,
+                                              40.0,
+                                            ),
                                             child: RichText(
                                               textScaler: MediaQuery.of(context)
                                                   .textScaler,
@@ -774,14 +777,14 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                                     ),
                                                   ),
                                                   TextSpan(
-                                                    text: '를 클릭 하셔서 점수가 어디 포함되는지 확인하시고 본인의 청력 건강 상태를 점검하시기 바랍니다.',
+                                                    text:
+                                                        '를 클릭 하셔서 점수가 어디 포함되는지 확인하시고 본인의 청력 건강 상태를 점검하시기 바랍니다.',
                                                     style: TextStyle(),
                                                   ),
                                                 ],
-                                                style:
-                                                    FlutterFlowTheme.of(
-                                                      context,
-                                                    ).bodyMedium.override(
+                                                style: FlutterFlowTheme.of(
+                                                  context,
+                                                ).bodyMedium.override(
                                                       fontFamily: 'Readex Pro',
                                                       color: Color(0xFF0063A0),
                                                       fontSize: 24.0,
@@ -818,11 +821,11 @@ class _SelfTestPageWidgetState extends State<SelfTestPageWidget> {
                                       ),
                                       iconPadding:
                                           EdgeInsetsDirectional.fromSTEB(
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                            0.0,
-                                          ),
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                      ),
                                       color: Color(0xFF01C5A2),
                                       textStyle: FlutterFlowTheme.of(context)
                                           .titleSmall

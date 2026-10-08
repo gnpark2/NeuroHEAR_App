@@ -141,16 +141,22 @@ Future<int> queryCollectionCount(
   Query collection, {
   Query Function(Query)? queryBuilder,
   int limit = -1,
-}) {
-  final builder = queryBuilder ?? (q) => q;
+}) async {
+  final builder = queryBuilder ?? (query) => query;
   var query = builder(collection);
+
   if (limit > 0) {
     query = query.limit(limit);
   }
 
-  return query.count().get().catchError((err) {
-    print('Error querying $collection: $err');
-  }).then((value) => value.count!);
+  final snapshot = await query.count().get();
+  final count = snapshot.count;
+
+  if (count == null) {
+    throw StateError('문서 개수 조회 결과가 없습니다.');
+  }
+
+  return count;
 }
 
 Stream<List<T>> queryCollection<T>(

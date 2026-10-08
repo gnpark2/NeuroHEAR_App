@@ -89,8 +89,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 onPressed: () async {
                                   if (scaffoldKey.currentState!.isDrawerOpen ||
                                       scaffoldKey
-                                          .currentState!
-                                          .isEndDrawerOpen) {
+                                          .currentState!.isEndDrawerOpen) {
                                     Navigator.pop(context);
                                   }
                                 },
@@ -105,9 +104,14 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           highlightColor: Colors.transparent,
                           onTap: () async {
                             GoRouter.of(context).prepareAuthEvent();
-                            await authManager.signOut();
-                            GoRouter.of(context).clearRedirectLocation();
 
+                            await authManager.signOut();
+
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            GoRouter.of(context).clearRedirectLocation();
                             context.goNamedAuth('AuthPage', context.mounted);
                           },
                           child: Wrap(
@@ -140,7 +144,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                               Text(
                                 '로그아웃',
-                                style: FlutterFlowTheme.of(context).bodyMedium
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
                                     .override(
                                       fontFamily: 'Readex Pro',
                                       color: FlutterFlowTheme.of(context)
@@ -172,9 +177,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                 return GestureDetector(
                                   onTap: () =>
                                       _model.unfocusNode.canRequestFocus
-                                      ? FocusScope.of(context)
-                                            .requestFocus(_model.unfocusNode)
-                                      : FocusScope.of(context).unfocus(),
+                                          ? FocusScope.of(context)
+                                              .requestFocus(_model.unfocusNode)
+                                          : FocusScope.of(context).unfocus(),
                                   child: Padding(
                                     padding: MediaQuery.viewInsetsOf(context),
                                     child: DeleteUserComponentWidget(),
@@ -212,7 +217,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                               ),
                               Text(
                                 '탈퇴하기',
-                                style: FlutterFlowTheme.of(context).bodyMedium
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
                                     .override(
                                       fontFamily: 'Readex Pro',
                                       color: FlutterFlowTheme.of(context).error,
@@ -337,10 +343,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                     borderRadius: BorderRadius.circular(0.0),
                                     child: Image.asset(
                                       'assets/images/ce875a63ddcd419b93d729f509bd9888.jpg',
-                                      width:
-                                          MediaQuery.sizeOf(context).width *
+                                      width: MediaQuery.sizeOf(context).width *
                                           1.0,
-
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -359,13 +363,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Container(
-                                      width:
-                                          MediaQuery.sizeOf(context).width *
+                                      width: MediaQuery.sizeOf(context).width *
                                           1.0,
                                       constraints: BoxConstraints(
                                         minHeight:
                                             MediaQuery.sizeOf(context).height *
-                                            0.1,
+                                                0.1,
                                       ),
                                       decoration: BoxDecoration(),
                                       child: Column(
@@ -391,13 +394,12 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                       ),
                                     ),
                                     Container(
-                                      width:
-                                          MediaQuery.sizeOf(context).width *
+                                      width: MediaQuery.sizeOf(context).width *
                                           1.0,
                                       constraints: BoxConstraints(
                                         minHeight:
                                             MediaQuery.sizeOf(context).height *
-                                            0.2,
+                                                0.2,
                                       ),
                                       decoration: BoxDecoration(),
                                       child: Column(
@@ -486,14 +488,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
-                                                0.0,
-                                                0.0,
-                                                0.0,
-                                                16.0,
-                                              ),
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            16.0,
+                                          ),
                                           child: Container(
-                                            width:
-                                                MediaQuery.sizeOf(context)
+                                            width: MediaQuery.sizeOf(context)
                                                     .width *
                                                 1.0,
                                             decoration: BoxDecoration(),
@@ -503,8 +504,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 ClipRRect(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                        8.0,
-                                                      ),
+                                                    8.0,
+                                                  ),
                                                   child: Image.asset(
                                                     'assets/images/001-removebg-preview.png',
                                                     width: 300.0,
@@ -514,10 +515,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 ),
                                                 Text(
                                                   '자가 진단',
-                                                  style:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).bodyMedium.override(
+                                                  style: FlutterFlowTheme.of(
+                                                    context,
+                                                  ).bodyMedium.override(
                                                         fontFamily:
                                                             'Readex Pro',
                                                         color: Color(
@@ -567,14 +567,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
-                                                0.0,
-                                                0.0,
-                                                0.0,
-                                                16.0,
-                                              ),
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            16.0,
+                                          ),
                                           child: Container(
-                                            width:
-                                                MediaQuery.sizeOf(context)
+                                            width: MediaQuery.sizeOf(context)
                                                     .width *
                                                 1.0,
                                             decoration: BoxDecoration(),
@@ -584,8 +583,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 ClipRRect(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                        8.0,
-                                                      ),
+                                                    8.0,
+                                                  ),
                                                   child: Image.asset(
                                                     'assets/images/002-removebg-preview.png',
                                                     width: 300.0,
@@ -595,10 +594,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 ),
                                                 Text(
                                                   '기본 훈련',
-                                                  style:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).bodyMedium.override(
+                                                  style: FlutterFlowTheme.of(
+                                                    context,
+                                                  ).bodyMedium.override(
                                                         fontFamily:
                                                             'Readex Pro',
                                                         color: Color(
@@ -648,14 +646,13 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                         Padding(
                                           padding:
                                               EdgeInsetsDirectional.fromSTEB(
-                                                0.0,
-                                                0.0,
-                                                0.0,
-                                                16.0,
-                                              ),
+                                            0.0,
+                                            0.0,
+                                            0.0,
+                                            16.0,
+                                          ),
                                           child: Container(
-                                            width:
-                                                MediaQuery.sizeOf(context)
+                                            width: MediaQuery.sizeOf(context)
                                                     .width *
                                                 1.0,
                                             decoration: BoxDecoration(),
@@ -665,8 +662,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 ClipRRect(
                                                   borderRadius:
                                                       BorderRadius.circular(
-                                                        8.0,
-                                                      ),
+                                                    8.0,
+                                                  ),
                                                   child: Image.asset(
                                                     'assets/images/003-removebg-preview.png',
                                                     width: 300.0,
@@ -676,10 +673,9 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 ),
                                                 Text(
                                                   '소음 훈련',
-                                                  style:
-                                                      FlutterFlowTheme.of(
-                                                        context,
-                                                      ).bodyMedium.override(
+                                                  style: FlutterFlowTheme.of(
+                                                    context,
+                                                  ).bodyMedium.override(
                                                         fontFamily:
                                                             'Readex Pro',
                                                         color: Color(

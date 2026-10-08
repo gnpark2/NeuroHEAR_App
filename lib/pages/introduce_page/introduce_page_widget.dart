@@ -89,8 +89,7 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                 onPressed: () async {
                                   if (scaffoldKey.currentState!.isDrawerOpen ||
                                       scaffoldKey
-                                          .currentState!
-                                          .isEndDrawerOpen) {
+                                          .currentState!.isEndDrawerOpen) {
                                     Navigator.pop(context);
                                   }
                                 },
@@ -105,9 +104,14 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                           highlightColor: Colors.transparent,
                           onTap: () async {
                             GoRouter.of(context).prepareAuthEvent();
-                            await authManager.signOut();
-                            GoRouter.of(context).clearRedirectLocation();
 
+                            await authManager.signOut();
+
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            GoRouter.of(context).clearRedirectLocation();
                             context.goNamedAuth('AuthPage', context.mounted);
                           },
                           child: Wrap(
@@ -140,7 +144,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                               ),
                               Text(
                                 '로그아웃',
-                                style: FlutterFlowTheme.of(context).bodyMedium
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
                                     .override(
                                       fontFamily: 'Readex Pro',
                                       color: FlutterFlowTheme.of(context)
@@ -172,9 +177,9 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                 return GestureDetector(
                                   onTap: () =>
                                       _model.unfocusNode.canRequestFocus
-                                      ? FocusScope.of(context)
-                                            .requestFocus(_model.unfocusNode)
-                                      : FocusScope.of(context).unfocus(),
+                                          ? FocusScope.of(context)
+                                              .requestFocus(_model.unfocusNode)
+                                          : FocusScope.of(context).unfocus(),
                                   child: Padding(
                                     padding: MediaQuery.viewInsetsOf(context),
                                     child: DeleteUserComponentWidget(),
@@ -212,7 +217,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                               ),
                               Text(
                                 '탈퇴하기',
-                                style: FlutterFlowTheme.of(context).bodyMedium
+                                style: FlutterFlowTheme.of(context)
+                                    .bodyMedium
                                     .override(
                                       fontFamily: 'Readex Pro',
                                       color: FlutterFlowTheme.of(context).error,
@@ -340,7 +346,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                 ),
                                 child: Text(
                                   '\'뉴로히어\'에 대하여',
-                                  style: FlutterFlowTheme.of(context).bodyMedium
+                                  style: FlutterFlowTheme.of(context)
+                                      .bodyMedium
                                       .override(
                                         fontFamily: 'Readex Pro',
                                         color: Color(0xFF0063A0),
@@ -409,8 +416,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                       16.0,
                                     ),
                                     child: RichText(
-                                      textScaler: MediaQuery.of(context)
-                                          .textScaler,
+                                      textScaler:
+                                          MediaQuery.of(context).textScaler,
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
@@ -432,7 +439,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                             ),
                                           ),
                                           TextSpan(
-                                            text: '입니다. 난청이 있을 경우 치매 발병률은 다음과 같습니다.',
+                                            text:
+                                                '입니다. 난청이 있을 경우 치매 발병률은 다음과 같습니다.',
                                             style: TextStyle(),
                                           ),
                                         ],
@@ -452,8 +460,7 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                     borderRadius: BorderRadius.circular(8.0),
                                     child: Image.asset(
                                       'assets/images/_-removebg-preview_(1).png',
-                                      width:
-                                          MediaQuery.sizeOf(context).width *
+                                      width: MediaQuery.sizeOf(context).width *
                                           1.0,
                                       height: 350.0,
                                       fit: BoxFit.contain,
@@ -467,8 +474,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                       16.0,
                                     ),
                                     child: RichText(
-                                      textScaler: MediaQuery.of(context)
-                                          .textScaler,
+                                      textScaler:
+                                          MediaQuery.of(context).textScaler,
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
@@ -545,8 +552,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                       16.0,
                                     ),
                                     child: RichText(
-                                      textScaler: MediaQuery.of(context)
-                                          .textScaler,
+                                      textScaler:
+                                          MediaQuery.of(context).textScaler,
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
@@ -594,8 +601,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                       16.0,
                                     ),
                                     child: RichText(
-                                      textScaler: MediaQuery.of(context)
-                                          .textScaler,
+                                      textScaler:
+                                          MediaQuery.of(context).textScaler,
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
@@ -641,8 +648,8 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                                       16.0,
                                     ),
                                     child: RichText(
-                                      textScaler: MediaQuery.of(context)
-                                          .textScaler,
+                                      textScaler:
+                                          MediaQuery.of(context).textScaler,
                                       text: TextSpan(
                                         children: [
                                           TextSpan(
@@ -699,15 +706,16 @@ class _IntroducePageWidgetState extends State<IntroducePageWidget> {
                       Container(
                         width: MediaQuery.sizeOf(context).width * 1.0,
                         decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context)
-                              .secondaryBackground,
+                          color:
+                              FlutterFlowTheme.of(context).secondaryBackground,
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.max,
                           children: [
                             Text(
                               '뉴로히어의 목적',
-                              style: FlutterFlowTheme.of(context).bodyMedium
+                              style: FlutterFlowTheme.of(context)
+                                  .bodyMedium
                                   .override(
                                     fontFamily: 'Readex Pro',
                                     color: Color(0xFF0063A0),

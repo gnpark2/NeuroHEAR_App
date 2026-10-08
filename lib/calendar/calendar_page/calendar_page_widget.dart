@@ -18,14 +18,17 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
   late CalendarPageModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
   late Map<DateTime, List<Map<String, dynamic>>> _events;
   late DateTime _focusedDay;
   late DateTime _selectedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+
+  final CalendarFormat _calendarFormat = CalendarFormat.month;
 
   @override
   void initState() {
     super.initState();
+
     _model = createModel(context, () => CalendarPageModel());
     _focusedDay = DateTime.now();
     _selectedDay = _focusedDay;
@@ -39,18 +42,25 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
   }
 
   DateTime convertToKST(DateTime utcTime) {
-    return utcTime.toUtc().add(Duration(hours: 9));
+    return utcTime.toUtc().add(const Duration(hours: 9));
   }
 
-  // Function to normalize DateTime to date only (year, month, day)
   DateTime normalizeDate(DateTime dateTime) {
-    return DateTime(dateTime.year, dateTime.month, dateTime.day);
+    return DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final firstDay = DateTime.now().subtract(Duration(days: 365 * 10));
-    final lastDay = DateTime.now().add(Duration(days: 365 * 10));
+    final firstDay = DateTime.now().subtract(
+      const Duration(days: 365 * 10),
+    );
+    final lastDay = DateTime.now().add(
+      const Duration(days: 365 * 10),
+    );
 
     if (currentUserReference == null) {
       return const Scaffold(
@@ -75,19 +85,16 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
             child: Column(
               children: [
                 Container(
-                  padding: EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.only(bottom: 20),
                   child: StreamBuilder<List<BasicResultsRecord>>(
+                    // 과거 CreatedTime 필드로 저장된 문서도 조회합니다.
                     stream: queryBasicResultsRecord(
                       parent: currentUserReference,
-                      queryBuilder: (query) =>
-                          query.orderBy('createdTime', descending: true),
                     ),
                     builder: (context, basicSnapshot) {
                       return StreamBuilder<List<AdvancedResultsRecord>>(
                         stream: queryAdvancedResultsRecord(
                           parent: currentUserReference,
-                          queryBuilder: (query) =>
-                              query.orderBy('createdTime', descending: true),
                         ),
                         builder: (context, advancedSnapshot) {
                           if (basicSnapshot.hasError ||
@@ -105,94 +112,120 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                               ),
                             );
                           }
+
                           if (!basicSnapshot.hasData ||
                               !advancedSnapshot.hasData) {
-                            return Center(
+                            return const Center(
                               child: CircularProgressIndicator(),
                             );
                           }
 
-                          // Clear previous events
                           _events.clear();
 
-                          // Process BasicResults
-                          for (var record in basicSnapshot.data!) {
-                            final createdTime =
-                                record.snapshotData["createdTime"];
-                            if (createdTime != null) {
-                              final kstTime = convertToKST(createdTime);
-                              final date = normalizeDate(kstTime);
-                              final numOfQuestions =
-                                  record.snapshotData["numOfQuestions"];
-                              if (numOfQuestions is! num ||
-                                  numOfQuestions <= 0) {
-                                continue;
-                              }
-                              final numOfCollectQuestions =
-                                  record.snapshotData["numOfCollectQuestions"];
+                          // 모델의 getter가 현재·과거 필드명을 처리합니다.
+                          // 조회 후 날짜 기준으로 최신순 정렬합니다.
+                          final basicRecords = List<BasicResultsRecord>.of(
+                            basicSnapshot.data!,
+                          )..sort(
+                              (a, b) =>
+                                  (b.createdTime ?? DateTime(1970)).compareTo(
+                                a.createdTime ?? DateTime(1970),
+                              ),
+                            );
 
-                              if (_events[date] == null) {
-                                _events[date] = [];
-                              }
+                          final advancedRecords =
+                              List<AdvancedResultsRecord>.of(
+                            advancedSnapshot.data!,
+                          )..sort(
+                                  (a, b) => (b.createdTime ?? DateTime(1970))
+                                      .compareTo(
+                                    a.createdTime ?? DateTime(1970),
+                                  ),
+                                );
 
-                              _events[date]!.add({
-                                'type': '기본',
-                                'numOfQuestions': numOfQuestions,
-                                'numOfCollectQuestions': numOfCollectQuestions,
-                              });
+                          // 기본 훈련 기록
+                          for (final record in basicRecords) {
+                            final createdTime = record.createdTime;
+
+                            if (createdTime == null) {
+                              continue;
                             }
+
+                            final numOfQuestions = record.numOfQuestions;
+
+                            if (numOfQuestions <= 0) {
+                              continue;
+                            }
+
+                            final date = normalizeDate(
+                              convertToKST(createdTime),
+                            );
+
+                            _events.putIfAbsent(date, () => []);
+
+                            _events[date]!.add({
+                              'type': '기본',
+                              'numOfQuestions': numOfQuestions,
+                              'numOfCollectQuestions':
+                                  record.numOfCollectQuestions,
+                            });
                           }
 
-                          // Process AdvancedResults
-                          for (var record in advancedSnapshot.data!) {
-                            final createdTime =
-                                record.snapshotData["createdTime"];
-                            if (createdTime != null) {
-                              final kstTime = convertToKST(createdTime);
-                              final date = normalizeDate(kstTime);
-                              final numOfQuestions =
-                                  record.snapshotData["numOfQuestions"];
-                              if (numOfQuestions is! num ||
-                                  numOfQuestions <= 0) {
-                                continue;
-                              }
-                              final numOfCollectQuestions =
-                                  record.snapshotData["numOfCollectQuestions"];
+                          // 심화 훈련 기록
+                          for (final record in advancedRecords) {
+                            final createdTime = record.createdTime;
 
-                              if (_events[date] == null) {
-                                _events[date] = [];
-                              }
-
-                              _events[date]!.add({
-                                'type': '소음',
-                                'numOfQuestions': numOfQuestions,
-                                'numOfCollectQuestions': numOfCollectQuestions,
-                              });
+                            if (createdTime == null) {
+                              continue;
                             }
+
+                            final numOfQuestions = record.numOfQuestions;
+
+                            if (numOfQuestions <= 0) {
+                              continue;
+                            }
+
+                            final date = normalizeDate(
+                              convertToKST(createdTime),
+                            );
+
+                            _events.putIfAbsent(date, () => []);
+
+                            _events[date]!.add({
+                              'type': '소음',
+                              'numOfQuestions': numOfQuestions,
+                              'numOfCollectQuestions':
+                                  record.numOfCollectQuestions,
+                            });
                           }
 
-                          // Get selected day's events
                           final selectedEvents =
                               _events[normalizeDate(_selectedDay)] ?? [];
 
                           return Column(
                             children: [
                               Container(
-                                padding: EdgeInsets.only(bottom: 20),
+                                padding: const EdgeInsets.only(bottom: 20),
                                 child: TableCalendar(
                                   availableGestures:
                                       AvailableGestures.horizontalSwipe,
                                   locale: 'ko_KR',
                                   rowHeight: 80,
                                   daysOfWeekHeight: 40.0,
-                                  headerStyle: HeaderStyle(
+                                  headerStyle: const HeaderStyle(
                                     formatButtonVisible: false,
                                   ),
                                   daysOfWeekStyle: DaysOfWeekStyle(
-                                      decoration: BoxDecoration(
-                                    color: Color.fromARGB(255, 255, 231, 180),
-                                    borderRadius: BorderRadius.circular(20),
-                                  )),
+                                    decoration: BoxDecoration(
+                                      color: const Color.fromARGB(
+                                        255,
+                                        255,
+                                        231,
+                                        180,
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                  ),
                                   firstDay: firstDay,
                                   lastDay: lastDay,
                                   focusedDay: _focusedDay,
@@ -204,34 +237,35 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                   onDaySelected: (selectedDay, focusedDay) {
                                     setState(() {
                                       _selectedDay = selectedDay;
-                                      _focusedDay =
-                                          focusedDay; // update `_focusedDay` here as well
+                                      _focusedDay = focusedDay;
                                     });
                                   },
                                   eventLoader: (day) {
                                     final dateKey = normalizeDate(day);
-                                    final eventsForDay = _events[dateKey] ?? [];
-                                    return eventsForDay;
+                                    return _events[dateKey] ?? [];
                                   },
                                   calendarBuilders: CalendarBuilders(
                                     dowBuilder: (context, day) {
                                       final text =
                                           DateFormat.E('ko_KR').format(day);
+
                                       if (day.weekday == DateTime.sunday) {
-                                        return Center(
+                                        return const Center(
                                           child: Text(
-                                            "일",
-                                            style: TextStyle(color: Colors.red),
+                                            '일',
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                            ),
                                           ),
                                         );
                                       }
+
                                       return Container(
-                                        width:
-                                            50, // Increase width to give more space for the day headers
+                                        width: 50,
                                         alignment: Alignment.center,
                                         child: Text(
                                           text,
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.black,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -244,7 +278,7 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                           Text(
                                             DateFormat.yMMMM('ko_KR')
                                                 .format(day),
-                                            style: TextStyle(
+                                            style: const TextStyle(
                                               fontSize: 18.0,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -254,19 +288,24 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                     },
                                     markerBuilder: (context, date, events) {
                                       int trainingCount(String type) {
-                                        return events.fold<int>(0,
-                                            (total, event) {
-                                          if (event is! Map<String, dynamic> ||
-                                              event['type'] != type) {
-                                            return total;
-                                          }
+                                        return events.fold<int>(
+                                          0,
+                                          (total, event) {
+                                            if (event
+                                                    is! Map<String, dynamic> ||
+                                                event['type'] != type) {
+                                              return total;
+                                            }
 
-                                          final count = event['numOfQuestions'];
-                                          return total +
-                                              (count is num
-                                                  ? count.toInt()
-                                                  : 0);
-                                        });
+                                            final count =
+                                                event['numOfQuestions'];
+
+                                            return total +
+                                                (count is num
+                                                    ? count.toInt()
+                                                    : 0);
+                                          },
+                                        );
                                       }
 
                                       final basicCount = trainingCount('기본');
@@ -278,12 +317,15 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                       }
 
                                       Widget countBadge(
-                                          int count, Color color) {
+                                        int count,
+                                        Color color,
+                                      ) {
                                         return Container(
                                           width: double.infinity,
                                           height: 18,
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 2),
+                                            horizontal: 2,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: color,
                                             borderRadius:
@@ -292,10 +334,11 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                           child: FittedBox(
                                             fit: BoxFit.scaleDown,
                                             child: Text(
-                                              '${count}회',
+                                              '$count회',
                                               style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 12),
+                                                color: Colors.white,
+                                                fontSize: 12,
+                                              ),
                                             ),
                                           ),
                                         );
@@ -307,22 +350,28 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                         bottom: 2,
                                         child: Center(
                                           child: Container(
-                                            // Match the black date box's width and side margins.
                                             width: 40.0,
                                             margin: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
+                                              horizontal: 8.0,
+                                            ),
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 if (basicCount > 0)
                                                   countBadge(
-                                                      basicCount, Colors.blue),
+                                                    basicCount,
+                                                    Colors.blue,
+                                                  ),
                                                 if (basicCount > 0 &&
                                                     advancedCount > 0)
-                                                  const SizedBox(height: 2),
+                                                  const SizedBox(
+                                                    height: 2,
+                                                  ),
                                                 if (advancedCount > 0)
-                                                  countBadge(advancedCount,
-                                                      Colors.red),
+                                                  countBadge(
+                                                    advancedCount,
+                                                    Colors.red,
+                                                  ),
                                               ],
                                             ),
                                           ),
@@ -332,17 +381,18 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                     defaultBuilder:
                                         (context, date, focusedDay) {
                                       return Container(
-                                        margin: EdgeInsets.all(8.0),
-                                        alignment: Alignment
-                                            .topCenter, // Align the date to the top
+                                        margin: const EdgeInsets.all(8.0),
+                                        alignment: Alignment.topCenter,
                                         child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              '${date.day}',
-                                              style: TextStyle(
-                                                  fontSize: 18.0,
-                                                  fontWeight: FontWeight.bold),
-                                            )),
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '${date.day}',
+                                            style: const TextStyle(
+                                              fontSize: 18.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
                                       );
                                     },
                                     todayBuilder: (context, date, focusedDay) {
@@ -353,190 +403,202 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                           decoration: BoxDecoration(
                                             color: Colors.black,
                                             shape: BoxShape.rectangle,
-                                            borderRadius:
-                                                BorderRadius.circular(10.0),
+                                            borderRadius: BorderRadius.circular(
+                                              10.0,
+                                            ),
                                           ),
-                                          margin: EdgeInsets.only(
-                                              bottom: 40.0,
-                                              top: 8.0,
-                                              left: 8.0,
-                                              right: 8.0),
-                                          alignment: Alignment
-                                              .center, // Align the date to the center
+                                          margin: const EdgeInsets.only(
+                                            bottom: 40.0,
+                                            top: 8.0,
+                                            left: 8.0,
+                                            right: 8.0,
+                                          ),
+                                          alignment: Alignment.center,
                                           child: FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                '${date.day}',
-                                                style: TextStyle(
-                                                    fontSize: 18.0,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white),
-                                              )),
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              '${date.day}',
+                                              style: const TextStyle(
+                                                fontSize: 18.0,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },
                                     selectedBuilder:
                                         (context, date, focusedDay) {
-                                      bool isToday = date.year ==
-                                              DateTime.now().year &&
-                                          date.month == DateTime.now().month &&
-                                          date.day == DateTime.now().day;
+                                      final now = DateTime.now();
+
+                                      final isToday = date.year == now.year &&
+                                          date.month == now.month &&
+                                          date.day == now.day;
 
                                       if (isToday) {
                                         return Center(
-                                          child: Stack(children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                border: Border.all(
-                                                  width: 2,
-                                                  color: Colors.purple,
+                                          child: Stack(
+                                            children: [
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                    width: 2,
+                                                    color: Colors.purple,
+                                                  ),
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                    10,
+                                                  ),
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                              ),
-                                              margin: EdgeInsets.only(top: 8.0),
-                                              alignment: Alignment
-                                                  .topCenter, // Align the date to the top
-                                              child: FittedBox(
+                                                margin: const EdgeInsets.only(
+                                                  top: 8.0,
+                                                ),
+                                                alignment: Alignment.topCenter,
+                                                child: FittedBox(
                                                   fit: BoxFit.scaleDown,
                                                   child: Text(
                                                     '${date.day}',
-                                                    style: TextStyle(
-                                                        fontSize: 20.0,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  )),
-                                            ),
-                                            Center(
-                                              child: Container(
-                                                width: 40.0,
-                                                height: 40.0,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black,
-                                                  shape: BoxShape.rectangle,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10.0),
+                                                    style: const TextStyle(
+                                                      fontSize: 20.0,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
                                                 ),
-                                                margin: EdgeInsets.only(
+                                              ),
+                                              Center(
+                                                child: Container(
+                                                  width: 40.0,
+                                                  height: 40.0,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black,
+                                                    shape: BoxShape.rectangle,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                      10.0,
+                                                    ),
+                                                  ),
+                                                  margin: const EdgeInsets.only(
                                                     bottom: 40.0,
                                                     top: 11.0,
                                                     left: 8.0,
-                                                    right: 8.0),
-                                                alignment: Alignment
-                                                    .center, // Align the date to the center
-                                                child: FittedBox(
+                                                    right: 8.0,
+                                                  ),
+                                                  alignment: Alignment.center,
+                                                  child: FittedBox(
                                                     fit: BoxFit.scaleDown,
                                                     child: Text(
                                                       '${date.day}',
-                                                      style: TextStyle(
-                                                          fontSize: 18.0,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors.white),
-                                                    )),
+                                                      style: const TextStyle(
+                                                        fontSize: 18.0,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ]),
-                                        );
-                                      } else {
-                                        return Container(
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              width: 2,
-                                              color: Colors.purple,
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(10),
+                                            ],
                                           ),
-                                          margin: EdgeInsets.only(top: 8.0),
-                                          alignment: Alignment
-                                              .topCenter, // Align the date to the top
-                                          child: FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              child: Text(
-                                                '${date.day}',
-                                                style: TextStyle(
-                                                    fontSize: 20.0,
-                                                    fontWeight:
-                                                        FontWeight.bold),
-                                              )),
                                         );
                                       }
+
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            width: 2,
+                                            color: Colors.purple,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        margin: const EdgeInsets.only(
+                                          top: 8.0,
+                                        ),
+                                        alignment: Alignment.topCenter,
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '${date.day}',
+                                            style: const TextStyle(
+                                              fontSize: 20.0,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
                                     },
                                     outsideBuilder:
                                         (context, date, focusedDay) {
                                       return Container(
-                                        margin: EdgeInsets.all(8.0),
-                                        alignment: Alignment
-                                            .topCenter, // Align the date to the top
+                                        margin: const EdgeInsets.all(8.0),
+                                        alignment: Alignment.topCenter,
                                         child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              '${date.day}',
-                                              style: TextStyle(fontSize: 16.0),
-                                            )),
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '${date.day}',
+                                            style: const TextStyle(
+                                              fontSize: 16.0,
+                                            ),
+                                          ),
+                                        ),
                                       );
                                     },
                                     holidayBuilder:
                                         (context, date, focusedDay) {
                                       return Container(
-                                        margin: EdgeInsets.all(8.0),
-                                        alignment: Alignment
-                                            .topCenter, // Align the date to the top
+                                        margin: const EdgeInsets.all(8.0),
+                                        alignment: Alignment.topCenter,
                                         child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              '${date.day}',
-                                              style: TextStyle(
-                                                  fontSize: 18.0,
-                                                  color: Colors.red),
-                                            )),
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '${date.day}',
+                                            style: const TextStyle(
+                                              fontSize: 18.0,
+                                              color: Colors.red,
+                                            ),
+                                          ),
+                                        ),
                                       );
                                     },
                                   ),
                                 ),
                               ),
-
-                              SizedBox(
-                                  height:
-                                      10), // Add some space between the calendar and the event details
+                              const SizedBox(height: 10),
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(20),
                                   color: FlutterFlowTheme.of(context)
                                       .primaryBackground,
                                 ),
-                                padding: EdgeInsets.all(8),
+                                padding: const EdgeInsets.all(8),
                                 child: selectedEvents.isNotEmpty
                                     ? ListView.builder(
-                                        shrinkWrap:
-                                            true, // Prevent the ListView from taking up unnecessary space
+                                        shrinkWrap: true,
                                         physics:
                                             const NeverScrollableScrollPhysics(),
                                         itemCount: selectedEvents.length,
                                         itemBuilder: (context, index) {
                                           final event = selectedEvents[index];
+
                                           final type = event['type'];
                                           final numOfQuestions =
                                               event['numOfQuestions'];
                                           final numOfCollectQuestions =
                                               event['numOfCollectQuestions'];
-                                          final ratio = (event[
-                                                      'numOfQuestions'] ==
-                                                  0)
-                                              ? "해당 훈련을 진행하지 않았습니다."
-                                              : "정답률: " +
-                                                  (event['numOfCollectQuestions'] /
-                                                          event[
-                                                              'numOfQuestions'] *
-                                                          100)
-                                                      .toStringAsFixed(2);
+
+                                          final ratio = numOfQuestions == 0
+                                              ? '해당 훈련을 진행하지 않았습니다.'
+                                              : '정답률: ${(numOfCollectQuestions / numOfQuestions * 100).toStringAsFixed(2)}';
 
                                           return Container(
-                                            margin: EdgeInsets.symmetric(
-                                                vertical: 4, horizontal: 8),
-                                            padding: EdgeInsets.all(8),
+                                            margin: const EdgeInsets.symmetric(
+                                              vertical: 4,
+                                              horizontal: 8,
+                                            ),
+                                            padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
                                               color: type == '기본'
                                                   ? Colors.blue[100]
@@ -544,38 +606,49 @@ class _CalendarPageWidgetState extends State<CalendarPageWidget> {
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                               border: Border.all(
-                                                  color: type == '기본'
-                                                      ? Colors.blue
-                                                      : Colors.red),
+                                                color: type == '기본'
+                                                    ? Colors.blue
+                                                    : Colors.red,
+                                              ),
                                             ),
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text('Type: $type' '훈련 결과',
-                                                    style: TextStyle(
-                                                        fontSize: 20,
-                                                        fontWeight:
-                                                            FontWeight.bold)),
                                                 Text(
-                                                    '정답 수: $numOfCollectQuestions'
-                                                    '개',
-                                                    style: TextStyle(
-                                                        fontSize: 18)),
+                                                  'Type: $type' '훈련 결과',
+                                                  style: const TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
                                                 Text(
-                                                    '문제 수: $numOfQuestions' '개',
-                                                    style: TextStyle(
-                                                        fontSize: 18)),
-                                                Text(ratio,
-                                                    style: TextStyle(
-                                                        fontSize: 18)),
+                                                  '정답 수: $numOfCollectQuestions개',
+                                                  style: const TextStyle(
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  '문제 수: $numOfQuestions개',
+                                                  style: const TextStyle(
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  ratio,
+                                                  style: const TextStyle(
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
                                               ],
                                             ),
                                           );
                                         },
                                       )
-                                    : Center(
-                                        child: Text('해당 날짜에는 훈련을 하지 않았습니다.'),
+                                    : const Center(
+                                        child: Text(
+                                          '해당 날짜에는 훈련을 하지 않았습니다.',
+                                        ),
                                       ),
                               ),
                             ],

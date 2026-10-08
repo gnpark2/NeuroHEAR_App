@@ -226,13 +226,15 @@ class _AdvancedPracticePageWidgetState
                           highlightColor: Colors.transparent,
                           onTap: () async {
                             GoRouter.of(context).prepareAuthEvent();
-                            await authManager.signOut();
-                            GoRouter.of(context).clearRedirectLocation();
 
-                            context.goNamedAuth(
-                              'AuthPage',
-                              context.mounted,
-                            );
+                            await authManager.signOut();
+
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            GoRouter.of(context).clearRedirectLocation();
+                            context.goNamedAuth('AuthPage', context.mounted);
                           },
                           child: Wrap(
                             alignment: WrapAlignment.center,
